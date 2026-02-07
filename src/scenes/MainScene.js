@@ -4,6 +4,7 @@
 
 import Phaser from 'phaser';
 import Player from '../Player.js';
+import Obstacle from '../Obstacle.js';
 
 // ============================================
 // MAIN SCENE CLASS
@@ -20,11 +21,17 @@ export default class MainScene extends Phaser.Scene {
   // This method runs once when the scene starts
   // We use it to set up everything we need
   create() {
-    console.log('🎬 MainScene started - Phase 2!');
+    console.log('🎬 MainScene started - Phase 3!');
 
     // Get the width and height of our game screen
     const width = this.scale.width;
     const height = this.scale.height;
+
+    // ----------------------------------------
+    // GAME STATE
+    // ----------------------------------------
+    // Track whether the game is over or still playing
+    this.isGameOver = false;
 
     // ----------------------------------------
     // CREATE GRADIENT BACKGROUND
@@ -53,35 +60,31 @@ export default class MainScene extends Phaser.Scene {
     // CREATE GROUND LINE
     // ----------------------------------------
     // Draw a line to show where the ground is
-    // This helps visualize where the player will run
     const groundY = height - 100; // Ground is 100 pixels from the bottom
 
-    // Draw a thick white line for the ground
     const ground = this.add.rectangle(
-      width / 2, // X position (center)
-      groundY, // Y position
-      width, // Width (full screen width)
-      5, // Height (thin line)
-      0xffffff, // White color
-      0.5 // 50% transparent
+      width / 2,
+      groundY,
+      width,
+      5,
+      0xffffff,
+      0.5
     );
 
     // ----------------------------------------
     // CREATE LANE MARKERS (for debugging)
     // ----------------------------------------
     // Draw vertical lines to show where the 3 lanes are
-    // This helps us see if the player is moving to the right positions
-
     const lanes = [-150, 0, 150]; // Same lane positions as in Player.js
 
     for (let laneOffset of lanes) {
       this.add.rectangle(
-        width / 2 + laneOffset, // X position
-        height / 2, // Y position (center height)
-        2, // Width (thin line)
-        height, // Height (full screen)
-        0xffffff, // White color
-        0.2 // 20% transparent (very faint)
+        width / 2 + laneOffset,
+        height / 2,
+        2,
+        height,
+        0xffffff,
+        0.2
       );
     }
 
@@ -90,63 +93,77 @@ export default class MainScene extends Phaser.Scene {
     // ----------------------------------------
     // Create the player in the center lane, just above the ground
     this.player = new Player(
-      this, // Pass the scene to the player
-      width / 2, // X position (center of screen)
-      groundY - 30 // Y position (just above the ground)
+      this,
+      width / 2,
+      groundY - 30
     );
 
     console.log('✅ Player created');
 
     // ----------------------------------------
+    // OBSTACLE SYSTEM
+    // ----------------------------------------
+    // Array to store all active obstacles
+    this.obstacles = [];
+
+    // How often to spawn new obstacles (in milliseconds)
+    this.spawnInterval = 2000; // Spawn every 2 seconds
+
+    // Timer to track when to spawn next obstacle
+    this.spawnTimer = 0;
+
+    console.log('✅ Obstacle system initialized');
+
+    // ----------------------------------------
     // SET UP KEYBOARD CONTROLS
     // ----------------------------------------
-    // Create keyboard input handlers for arrow keys and spacebar
-    this.cursors = this.input.keyboard.createCursorKeys(); // Arrow keys
+    this.cursors = this.input.keyboard.createCursorKeys();
     this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.rKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R); // For restart
 
-    // Track if keys were just pressed (to prevent holding down keys)
+    // Track if keys were just pressed
     this.leftPressed = false;
     this.rightPressed = false;
     this.upPressed = false;
     this.downPressed = false;
     this.spacePressed = false;
+    this.rPressed = false;
 
     // ----------------------------------------
     // SET UP TOUCH/SWIPE CONTROLS
     // ----------------------------------------
-    // Add touch input for mobile devices
     this.input.on('pointerdown', (pointer) => {
       this.touchStartX = pointer.x;
       this.touchStartY = pointer.y;
     });
 
     this.input.on('pointerup', (pointer) => {
-      // Calculate how far the finger moved
+      // If game is over, restart on tap
+      if (this.isGameOver) {
+        this.restartGame();
+        return;
+      }
+
+      // Calculate swipe distance
       const deltaX = pointer.x - this.touchStartX;
       const deltaY = pointer.y - this.touchStartY;
-
-      // Minimum distance to count as a swipe (prevents accidental taps)
       const minSwipeDistance = 30;
 
-      // Check if horizontal swipe (left or right)
+      // Check horizontal swipe
       if (Math.abs(deltaX) > Math.abs(deltaY)) {
         if (Math.abs(deltaX) > minSwipeDistance) {
           if (deltaX > 0) {
-            // Swiped right
             this.player.moveRight();
           } else {
-            // Swiped left
             this.player.moveLeft();
           }
         }
       } else {
-        // Vertical swipe (up or down)
+        // Vertical swipe
         if (Math.abs(deltaY) > minSwipeDistance) {
           if (deltaY < 0) {
-            // Swiped up
             this.player.jump();
           } else {
-            // Swiped down
             this.player.duck();
           }
         }
@@ -156,11 +173,10 @@ export default class MainScene extends Phaser.Scene {
     // ----------------------------------------
     // ADD STATUS TEXT
     // ----------------------------------------
-    // Show that Phase 2 is running
     this.statusText = this.add.text(
       width / 2,
       30,
-      '🎮 All Out Rush - Phase 2 Complete!',
+      '🎮 All Out Rush - Phase 3!',
       {
         fontSize: '24px',
         color: '#ffffff',
@@ -175,40 +191,202 @@ export default class MainScene extends Phaser.Scene {
     this.instructionsText = this.add.text(
       width / 2,
       height - 20,
-      'Desktop: ← → to move lanes | ↑ or SPACE to jump | ↓ to duck  •  Mobile: Swipe!',
+      'Desktop: ← → to move | ↑/SPACE to jump | ↓ to duck | R to restart  •  Mobile: Swipe!',
       {
-        fontSize: '14px',
+        fontSize: '13px',
         color: '#ffffff',
         fontStyle: 'italic'
       }
     );
     this.instructionsText.setOrigin(0.5, 0.5);
 
+    // Create game over text (hidden initially)
+    this.gameOverText = this.add.text(
+      width / 2,
+      height / 2,
+      '💥 GAME OVER!\nPress R or Tap to Restart',
+      {
+        fontSize: '48px',
+        color: '#ff4444',
+        fontStyle: 'bold',
+        stroke: '#000000',
+        strokeThickness: 6,
+        align: 'center'
+      }
+    );
+    this.gameOverText.setOrigin(0.5, 0.5);
+    this.gameOverText.setVisible(false); // Hidden until game over
+
     // Store game dimensions
     this.gameWidth = width;
     this.gameHeight = height;
 
     console.log('✅ Controls set up');
-    console.log('🎮 Phase 2 ready! Try moving the player around!');
+    console.log('🎮 Phase 3 ready! Avoid the obstacles!');
+  }
+
+  // ============================================
+  // SPAWN OBSTACLE
+  // ============================================
+  // Create a new obstacle at a random lane with a random type
+  spawnObstacle() {
+    // Choose a random lane (0, 1, or 2)
+    const randomLane = Phaser.Math.Between(0, 2);
+
+    // Choose a random obstacle type
+    const types = ['lane', 'jump', 'duck'];
+    const randomType = Phaser.Utils.Array.GetRandom(types);
+
+    // Create the obstacle
+    const obstacle = new Obstacle(this, randomLane, randomType);
+
+    // Add it to our list of active obstacles
+    this.obstacles.push(obstacle);
+
+    console.log(`✨ Spawned ${randomType} obstacle in lane ${randomLane}`);
+  }
+
+  // ============================================
+  // CHECK COLLISION
+  // ============================================
+  // Check if the player hit an obstacle
+  checkCollision(obstacle) {
+    const playerSprite = this.player.getSprite();
+    const obstacleSprite = obstacle.getSprite();
+
+    // Check if the sprites are overlapping
+    const bounds1 = playerSprite.getBounds();
+    const bounds2 = obstacleSprite.getBounds();
+
+    if (Phaser.Geom.Intersects.RectangleToRectangle(bounds1, bounds2)) {
+      // They're touching! Now check if it's a valid collision
+      // based on the obstacle type and player state
+
+      const obstacleType = obstacle.getType();
+      const obstacleLane = obstacle.getLane();
+      const playerLane = this.player.currentLane;
+
+      // ----------------------------------------
+      // COLLISION RULES
+      // ----------------------------------------
+
+      if (obstacleType === 'lane') {
+        // LANE OBSTACLE: Only collide if player is in the same lane
+        if (playerLane === obstacleLane) {
+          console.log('💥 Hit lane obstacle!');
+          return true; // Collision!
+        }
+      } else if (obstacleType === 'jump') {
+        // JUMP OBSTACLE: Only collide if player is NOT jumping
+        if (playerLane === obstacleLane && !this.player.isJumping) {
+          console.log('💥 Hit jump obstacle - should have jumped!');
+          return true; // Collision!
+        }
+      } else if (obstacleType === 'duck') {
+        // DUCK OBSTACLE: Only collide if player is NOT ducking
+        if (playerLane === obstacleLane && !this.player.isDucking) {
+          console.log('💥 Hit duck obstacle - should have ducked!');
+          return true; // Collision!
+        }
+      }
+    }
+
+    return false; // No collision
+  }
+
+  // ============================================
+  // GAME OVER
+  // ============================================
+  // Called when the player hits an obstacle
+  gameOver() {
+    console.log('☠️ GAME OVER!');
+
+    this.isGameOver = true;
+
+    // Show game over text
+    this.gameOverText.setVisible(true);
+
+    // Stop the player from moving
+    this.player.getSprite().body.setVelocity(0, 0);
+  }
+
+  // ============================================
+  // RESTART GAME
+  // ============================================
+  // Restart the game from the beginning
+  restartGame() {
+    console.log('🔄 Restarting game...');
+
+    // Simply restart the scene
+    // This will call create() again and set everything up fresh
+    this.scene.restart();
   }
 
   // ============================================
   // UPDATE METHOD
   // ============================================
   // This method runs every frame (about 60 times per second)
-  update() {
+  update(time, delta) {
+    // Don't update gameplay if game is over
+    if (this.isGameOver) {
+      // Only check for restart input
+      if (this.rKey.isDown && !this.rPressed) {
+        this.restartGame();
+        this.rPressed = true;
+      }
+      if (this.rKey.isUp) {
+        this.rPressed = false;
+      }
+      return; // Skip the rest of the update
+    }
+
+    // ----------------------------------------
+    // SPAWN OBSTACLES
+    // ----------------------------------------
+    // Increase the spawn timer
+    this.spawnTimer += delta;
+
+    // If enough time has passed, spawn a new obstacle
+    if (this.spawnTimer >= this.spawnInterval) {
+      this.spawnObstacle();
+      this.spawnTimer = 0; // Reset the timer
+    }
+
+    // ----------------------------------------
+    // UPDATE OBSTACLES
+    // ----------------------------------------
+    // Move each obstacle and check if it should be removed
+    for (let i = this.obstacles.length - 1; i >= 0; i--) {
+      const obstacle = this.obstacles[i];
+
+      // Move the obstacle
+      obstacle.update(delta);
+
+      // Check if obstacle has passed the player
+      if (obstacle.isOffScreen()) {
+        console.log('🗑️ Removing obstacle (off screen)');
+        obstacle.destroy();
+        this.obstacles.splice(i, 1); // Remove from array
+        continue; // Skip collision check for this obstacle
+      }
+
+      // Check for collision with player
+      if (this.checkCollision(obstacle)) {
+        this.gameOver();
+        return; // Stop updating after game over
+      }
+    }
+
     // ----------------------------------------
     // HANDLE KEYBOARD INPUT
     // ----------------------------------------
-    // Check for key presses and call the appropriate player methods
-
     // LEFT ARROW - Move left
     if (this.cursors.left.isDown && !this.leftPressed) {
       this.player.moveLeft();
-      this.leftPressed = true; // Mark as pressed so it doesn't repeat
+      this.leftPressed = true;
     }
     if (this.cursors.left.isUp) {
-      this.leftPressed = false; // Reset when key is released
+      this.leftPressed = false;
     }
 
     // RIGHT ARROW - Move right
@@ -229,7 +407,7 @@ export default class MainScene extends Phaser.Scene {
       this.upPressed = false;
     }
 
-    // SPACE - Also jump (alternative to up arrow)
+    // SPACE - Also jump
     if (this.spaceKey.isDown && !this.spacePressed) {
       this.player.jump();
       this.spacePressed = true;
@@ -250,7 +428,6 @@ export default class MainScene extends Phaser.Scene {
     // ----------------------------------------
     // UPDATE PLAYER
     // ----------------------------------------
-    // Let the player update its own state (check for landing, etc.)
     this.player.update();
   }
 }

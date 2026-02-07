@@ -80,27 +80,44 @@ The moving circles prove that the game loop is working correctly!
 - Touch/swipe controls for mobile
 - Ground and lane visual guides
 
+### Phase 3 ✅
+- Obstacle system with 3 types:
+  - **Lane obstacles** (red) - Switch lanes to avoid
+  - **Jump obstacles** (orange) - Jump to clear
+  - **Duck obstacles** (blue) - Duck to pass under
+- Obstacle spawning (every 2 seconds)
+- Smart collision detection (type-specific rules)
+- Game over state
+- Restart functionality (R key or tap)
+
 ## 🎮 How to Play
 
 **Desktop Controls:**
 - `←` `→` Arrow keys - Move between lanes
 - `↑` Arrow or `SPACE` - Jump
 - `↓` Arrow - Duck/Slide
+- `R` - Restart after game over
 
 **Mobile Controls:**
 - Swipe left/right - Move between lanes
 - Swipe up - Jump
 - Swipe down - Duck/Slide
+- Tap screen - Restart after game over
+
+**Obstacle Guide:**
+- 🔴 **Red tall barriers** - Switch lanes!
+- 🟠 **Orange low blocks** - Jump over!
+- 🔵 **Blue horizontal bars** - Duck under!
 
 ## ⏭️ What's Next?
 
-Phase 2 is complete! The player movement system is fully functional.
+Phase 3 is complete! The game is now fully playable with obstacles and game-over logic.
 
 In future phases, we'll add:
-- Obstacles to dodge
-- Force field system
-- Coins and gems
-- Score tracking
+- Force field protection system
+- Coins and gems collection
+- Economy system (coins → gems → force fields)
+- Score and distance tracking
 - And much more!
 
 ## 🎓 Learning Resources
