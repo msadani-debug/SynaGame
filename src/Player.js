@@ -194,8 +194,8 @@ export default class Player {
     this.sprite.displayHeight = this.duckHeight;
 
     // Automatically stand back up after a short time
-    // Increased by 20% for longer duck duration (400ms → 480ms)
-    this.scene.time.delayedCall(480, () => {
+    // Increased by 20% again for even longer duck duration (480ms → 576ms)
+    this.scene.time.delayedCall(576, () => {
       this.standUp();
     });
   }
