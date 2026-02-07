@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- This section has information about our game -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Endless Runner Game</title>
+
+  <style>
+    /* This CSS makes our game look nice and centered on the page */
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1a1a1a; /* Dark background color */
+      display: flex;
+      justify-content: center; /* Center the game horizontally */
+      align-items: center; /* Center the game vertically */
+      min-height: 100vh; /* Make the page full height */
+      font-family: Arial, sans-serif;
+    }
+
+    /* This is where Phaser will put our game */
+    #game-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- This div is where our game will appear -->
+  <div id="game-container"></div>
+
+  <!-- This loads our main JavaScript file that starts the game -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "synagame",
+  "version": "1.0.0",
+  "description": "A fast-paced endless runner game built with Phaser.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "phaser": "^3.80.1"
+  },
+  "devDependencies": {
+    "vite": "^5.0.11"
+  }
+}
