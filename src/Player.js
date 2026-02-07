@@ -65,12 +65,14 @@ export default class Player {
     this.sprite.body.setGravityY(1500); // How fast the player falls (higher = falls faster)
 
     // ----------------------------------------
-    // GROUND LEVEL
+    // GROUND LEVEL (CRITICAL FOR LANDING)
     // ----------------------------------------
-    // Remember where the ground is so we know when the player lands
+    // This is the Y position where the player's CENTER should be when on the ground
+    // We store this so we can check if the player has landed
     this.groundY = y;
 
     console.log('👤 Player created at lane', this.currentLane);
+    console.log(`   Ground Y position: ${this.groundY}`);
   }
 
   // ============================================
@@ -219,23 +221,65 @@ export default class Player {
   // Called every frame to update the player's state
   update() {
     // ----------------------------------------
-    // CHECK IF PLAYER LANDED
+    // GROUND DETECTION & LANDING (FIXED!)
     // ----------------------------------------
-    // If the player is jumping and touches the ground, they've landed
-    if (this.isJumping && this.sprite.body.touching.down) {
-      console.log('📍 Landed');
-      this.isJumping = false;
+    // This is the CORRECT way to detect landing:
+    // Check the player's Y position directly instead of relying on physics collisions
+
+    if (this.isJumping) {
+      // Player is in the air - check if they've reached the ground
+
+      // Has the player fallen back to (or below) the ground level?
+      if (this.sprite.y >= this.groundY) {
+        // YES - Player has landed!
+
+        console.log('📍 Landed! (Y position reached ground)');
+
+        // STEP 1: Snap the player exactly to the ground position
+        // This prevents them from sinking below the ground
+        this.sprite.y = this.groundY;
+
+        // STEP 2: Stop all vertical movement
+        // Without this, the player would keep falling or bouncing
+        this.sprite.body.setVelocityY(0);
+
+        // STEP 3: Reset the jumping state
+        // Now the player can jump again!
+        this.isJumping = false;
+
+        console.log('   ✅ isJumping reset to false - can jump again!');
+      }
+    } else {
+      // Player is on the ground - make sure they stay there
+
+      // If the player somehow got below ground (shouldn't happen, but just in case)
+      if (this.sprite.y > this.groundY) {
+        console.log('⚠️ Player below ground - snapping back up');
+        this.sprite.y = this.groundY;
+        this.sprite.body.setVelocityY(0);
+      }
+
+      // If the player is above ground but not jumping (shouldn't happen normally)
+      if (this.sprite.y < this.groundY) {
+        // This can happen if something else moves the player up
+        // Just let gravity pull them back down naturally
+        // Don't interfere - gravity will handle it
+      }
     }
 
     // ----------------------------------------
-    // PREVENT FALLING THROUGH FLOOR
+    // WHY THIS WORKS
     // ----------------------------------------
-    // Make sure the player stays above the ground
-    // (This is a backup in case physics glitches)
-    if (this.sprite.y > this.groundY && !this.isJumping) {
-      this.sprite.y = this.groundY;
-      this.sprite.body.setVelocityY(0);
-    }
+    // The old code relied on "sprite.body.touching.down" which only works
+    // if the player is touching another physics body (like a ground object).
+    // Since we don't have a ground object, touching.down never became true!
+    //
+    // The NEW code checks the player's Y position directly:
+    // - If player Y >= groundY, they've reached the ground
+    // - We snap them to groundY and reset isJumping
+    // - This works 100% of the time, regardless of physics bodies
+    //
+    // Simple and reliable!
   }
 
   // ============================================
