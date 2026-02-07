@@ -165,8 +165,8 @@ export default class Player {
 
     // Give the player an upward velocity (negative Y = up)
     // The gravity will automatically pull them back down
-    // Increased by 20% for longer air time (-600 → -720)
-    this.sprite.body.setVelocityY(-720); // Jump strength (higher = jump higher)
+    // Increased by 30% for longer air time (-720 → -936)
+    this.sprite.body.setVelocityY(-936); // Jump strength (higher = jump higher)
   }
 
   // ============================================
@@ -194,8 +194,8 @@ export default class Player {
     this.sprite.displayHeight = this.duckHeight;
 
     // Automatically stand back up after a short time
-    // Increased by 20% again for even longer duck duration (480ms → 576ms)
-    this.scene.time.delayedCall(576, () => {
+    // Increased by 30% for longer duck duration (576ms → 749ms)
+    this.scene.time.delayedCall(749, () => {
       this.standUp();
     });
   }
