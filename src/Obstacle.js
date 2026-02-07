@@ -56,13 +56,17 @@ export default class Obstacle {
     const lanes = [-150, 0, 150]; // Same lane positions as Player
     const startX = scene.scale.width / 2 + lanes[lane]; // X position based on lane
 
-    // Start Y position depends on obstacle type
-    // Duck obstacles are higher up (they're barriers you duck under)
+    // ----------------------------------------
+    // STARTING POSITION BY TYPE
+    // ----------------------------------------
+    // All obstacles start above the screen
+    // Duck obstacles start higher to give more warning
+
     let startY;
     if (type === 'duck') {
-      startY = -100; // Start higher up for duck obstacles
+      startY = -100; // Start higher for duck obstacles
     } else {
-      startY = -50; // Start just above screen
+      startY = -50; // Standard starting position
     }
 
     // ----------------------------------------
@@ -88,20 +92,7 @@ export default class Obstacle {
     // This creates the "running forward" effect
     this.speed = 200; // Pixels per second
 
-    // Store the ground level for duck obstacles
-    // Duck obstacles need to stay at a specific height
-    this.groundY = scene.scale.height - 100;
-
-    // For duck obstacles, position them above the player
-    if (type === 'duck') {
-      // Duck obstacles float above the ground
-      this.targetY = this.groundY - 90; // Above player's head
-    } else {
-      // Other obstacles move to ground level
-      this.targetY = this.groundY;
-    }
-
-    console.log(`🚧 ${type} obstacle spawned in lane ${lane}`);
+    console.log(`🚧 ${type} obstacle spawned in lane ${lane} at Y=${Math.round(startY)}`);
   }
 
   // ============================================
@@ -115,17 +106,24 @@ export default class Obstacle {
     // ----------------------------------------
     // MOVE TOWARD PLAYER
     // ----------------------------------------
-    // Move the obstacle downward (toward the player at the bottom)
+    // ALL obstacles move downward continuously
+    // They do NOT stop - they move toward the player and then past them
+
     const moveAmount = (this.speed * delta) / 1000; // Convert to pixels
     this.sprite.y += moveAmount;
 
     // ----------------------------------------
-    // ADJUST HEIGHT FOR DUCK OBSTACLES
+    // WHY THIS IS SIMPLE AND CORRECT
     // ----------------------------------------
-    // Duck obstacles should stay at head height, not on the ground
-    if (this.type === 'duck' && this.sprite.y > this.targetY) {
-      this.sprite.y = this.targetY; // Lock at head height
-    }
+    // OLD CODE: Duck obstacles were locked at a specific height
+    // This prevented them from reaching the player or being removed
+    //
+    // NEW CODE: All obstacles just keep moving downward
+    // - They reach the player (collision detection happens)
+    // - They pass the player (continue moving)
+    // - They go off-screen (get removed by isOffScreen())
+    //
+    // No special cases! Simple and reliable.
   }
 
   // ============================================
@@ -134,7 +132,14 @@ export default class Obstacle {
   // Check if the obstacle has passed the player and should be removed
   isOffScreen() {
     // If obstacle is below the screen, it's passed the player
-    return this.sprite.y > this.scene.scale.height + 50;
+    // This now works for ALL obstacle types (including duck obstacles!)
+    const offScreen = this.sprite.y > this.scene.scale.height + 50;
+
+    if (offScreen) {
+      console.log(`🗑️ ${this.type} obstacle passed player and going off-screen`);
+    }
+
+    return offScreen;
   }
 
   // ============================================

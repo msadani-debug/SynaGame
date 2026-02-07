@@ -223,63 +223,70 @@ export default class Player {
     // ----------------------------------------
     // GROUND DETECTION & LANDING (FIXED!)
     // ----------------------------------------
-    // This is the CORRECT way to detect landing:
-    // Check the player's Y position directly instead of relying on physics collisions
+    // This checks if the player has landed after jumping
 
     if (this.isJumping) {
-      // Player is in the air - check if they've reached the ground
+      // Player is in the air - check if they've landed
 
-      // Has the player fallen back to (or below) the ground level?
-      if (this.sprite.y >= this.groundY) {
-        // YES - Player has landed!
+      // CRITICAL FIX: Check velocity direction FIRST
+      // Why? When jump() is called, velocity is set to -600 (upward)
+      // But the physics engine hasn't moved the player yet!
+      // So we must check: is the player falling DOWN (not going up)?
 
-        console.log('📍 Landed! (Y position reached ground)');
+      const velocityY = this.sprite.body.velocity.y;
 
-        // STEP 1: Snap the player exactly to the ground position
-        // This prevents them from sinking below the ground
-        this.sprite.y = this.groundY;
+      // Is the player moving downward (falling)?
+      if (velocityY >= 0) {
+        // YES - player is falling or at peak of jump
+        // Now check if they've reached the ground
 
-        // STEP 2: Stop all vertical movement
-        // Without this, the player would keep falling or bouncing
-        this.sprite.body.setVelocityY(0);
+        if (this.sprite.y >= this.groundY) {
+          // Player has landed!
 
-        // STEP 3: Reset the jumping state
-        // Now the player can jump again!
-        this.isJumping = false;
+          console.log('📍 Landed! (Falling & reached ground)');
 
-        console.log('   ✅ isJumping reset to false - can jump again!');
+          // STEP 1: Snap player to ground (prevent sinking)
+          this.sprite.y = this.groundY;
+
+          // STEP 2: Stop vertical movement (prevent bouncing)
+          this.sprite.body.setVelocityY(0);
+
+          // STEP 3: Reset jump state (allow next jump)
+          this.isJumping = false;
+
+          console.log('   ✅ isJumping reset - can jump again!');
+        }
+        // else: player is falling but hasn't reached ground yet
       }
+      // else: player is moving upward, still rising from jump
+
     } else {
       // Player is on the ground - make sure they stay there
 
-      // If the player somehow got below ground (shouldn't happen, but just in case)
+      // Safety check: if player somehow fell below ground
       if (this.sprite.y > this.groundY) {
-        console.log('⚠️ Player below ground - snapping back up');
+        console.log('⚠️ Player below ground - snapping up');
         this.sprite.y = this.groundY;
         this.sprite.body.setVelocityY(0);
-      }
-
-      // If the player is above ground but not jumping (shouldn't happen normally)
-      if (this.sprite.y < this.groundY) {
-        // This can happen if something else moves the player up
-        // Just let gravity pull them back down naturally
-        // Don't interfere - gravity will handle it
       }
     }
 
     // ----------------------------------------
-    // WHY THIS WORKS
+    // WHY THIS WORKS NOW
     // ----------------------------------------
-    // The old code relied on "sprite.body.touching.down" which only works
-    // if the player is touching another physics body (like a ground object).
-    // Since we don't have a ground object, touching.down never became true!
+    // OLD CODE: Checked position only (sprite.y >= groundY)
+    // PROBLEM: Position didn't change immediately when velocity was set
+    // RESULT: isJumping reset in same frame it was set!
     //
-    // The NEW code checks the player's Y position directly:
-    // - If player Y >= groundY, they've reached the ground
-    // - We snap them to groundY and reset isJumping
-    // - This works 100% of the time, regardless of physics bodies
+    // NEW CODE: Checks velocity AND position
+    // - Jump sets velocity to -600 (upward)
+    // - First update(): velocityY < 0, so skip landing check
+    // - Player moves upward for several frames
+    // - At peak: velocityY becomes 0, then positive (falling)
+    // - Now landing check can run
+    // - When sprite.y >= groundY while falling, player has landed
     //
-    // Simple and reliable!
+    // This ensures isJumping stays true for the ENTIRE jump duration!
   }
 
   // ============================================
