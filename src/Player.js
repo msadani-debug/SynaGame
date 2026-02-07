@@ -165,8 +165,8 @@ export default class Player {
 
     // Give the player an upward velocity (negative Y = up)
     // The gravity will automatically pull them back down
-    // Increased by 30% for longer air time (-720 → -936)
-    this.sprite.body.setVelocityY(-936); // Jump strength (higher = jump higher)
+    // Balanced jump height (not too high, not too low)
+    this.sprite.body.setVelocityY(-720); // Jump strength (higher = jump higher)
   }
 
   // ============================================
