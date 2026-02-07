@@ -1,4 +1,4 @@
-# 🎮 Endless Runner Game
+# 🎮 All Out Rush
 
 A fast-paced, Subway Surfers-inspired endless runner built with Phaser.js!
 

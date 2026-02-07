@@ -1,7 +1,7 @@
 {
-  "name": "synagame",
+  "name": "all-out-rush",
   "version": "1.0.0",
-  "description": "A fast-paced endless runner game built with Phaser.js",
+  "description": "All Out Rush - A fast-paced endless runner game built with Phaser.js",
   "type": "module",
   "scripts": {
     "dev": "vite",

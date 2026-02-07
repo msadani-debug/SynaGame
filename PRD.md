@@ -2,7 +2,7 @@
 Version: v1.7 (FINAL & FROZEN)
 
 ## GAME TITLE
-(To be decided)
+All Out Rush
 
 ## 1. PRODUCT OVERVIEW
 
