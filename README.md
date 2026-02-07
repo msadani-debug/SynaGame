@@ -63,25 +63,44 @@ The moving circles prove that the game loop is working correctly!
 - `npm run build` - Build the game for production (creates final files)
 - `npm run preview` - Preview the production build
 
-## 📚 What's Included in Phase 1?
+## 📚 What's Included?
 
-✅ Project setup with Vite and Phaser.js
-✅ Basic game initialization
-✅ MainScene with animated background
-✅ Working game loop (update function)
-✅ Visual proof the game is running (moving circles)
+### Phase 1 ✅
+- Project setup with Vite and Phaser.js
+- Basic game initialization
+- MainScene with animated background
+- Working game loop (update function)
+
+### Phase 2 ✅
+- Playable character (red rectangle)
+- 3-lane system with smooth movement
+- Jumping with gravity
+- Ducking/sliding
+- Keyboard controls (arrow keys + spacebar)
+- Touch/swipe controls for mobile
+- Ground and lane visual guides
+
+## 🎮 How to Play
+
+**Desktop Controls:**
+- `←` `→` Arrow keys - Move between lanes
+- `↑` Arrow or `SPACE` - Jump
+- `↓` Arrow - Duck/Slide
+
+**Mobile Controls:**
+- Swipe left/right - Move between lanes
+- Swipe up - Jump
+- Swipe down - Duck/Slide
 
 ## ⏭️ What's Next?
 
-Phase 1 is complete! We have a solid technical foundation.
+Phase 2 is complete! The player movement system is fully functional.
 
 In future phases, we'll add:
-- Player character
-- Lane movement (left/right)
-- Jumping and ducking
-- Obstacles
+- Obstacles to dodge
 - Force field system
 - Coins and gems
+- Score tracking
 - And much more!
 
 ## 🎓 Learning Resources
