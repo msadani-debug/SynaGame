@@ -120,6 +120,7 @@ export default class MainScene extends Phaser.Scene {
     this.cursors = this.input.keyboard.createCursorKeys();
     this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.rKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R); // For restart
+    this.fKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F); // For force field
 
     // Track if keys were just pressed
     this.leftPressed = false;
@@ -128,6 +129,7 @@ export default class MainScene extends Phaser.Scene {
     this.downPressed = false;
     this.spacePressed = false;
     this.rPressed = false;
+    this.fPressed = false;
 
     // ----------------------------------------
     // SET UP TOUCH/SWIPE CONTROLS
@@ -191,7 +193,7 @@ export default class MainScene extends Phaser.Scene {
     this.instructionsText = this.add.text(
       width / 2,
       height - 20,
-      'Desktop: ← → to move | ↑/SPACE to jump | ↓ to duck | R to restart  •  Mobile: Swipe!',
+      'Desktop: ← → lanes | ↑/SPACE jump | ↓ duck | F force field | R restart  •  Mobile: Swipe!',
       {
         fontSize: '13px',
         color: '#ffffff',
@@ -392,9 +394,11 @@ export default class MainScene extends Phaser.Scene {
   // Restart the game from the beginning
   restartGame() {
     console.log('🔄 Restarting game...');
+    console.log('   Force fields will reset to 25 (Phase 4 behavior)');
 
     // Simply restart the scene
     // This will call create() again and set everything up fresh
+    // IMPORTANT: Player is recreated, so force fields reset to 25
     this.scene.restart();
   }
 
@@ -501,18 +505,29 @@ export default class MainScene extends Phaser.Scene {
       this.downPressed = false;
     }
 
+    // F KEY - Activate Force Field
+    if (this.fKey.isDown && !this.fPressed) {
+      this.player.activateForceField();
+      this.fPressed = true;
+    }
+    if (this.fKey.isUp) {
+      this.fPressed = false;
+    }
+
     // ----------------------------------------
     // UPDATE DEBUG TEXT (ON SCREEN)
     // ----------------------------------------
     // Show player state and obstacle count on screen
+    const forceFieldStatus = this.player.isForceFieldActive() ? 'ACTIVE' : 'OFF';
     const debugInfo = [
       `Player Lane: ${this.player.currentLane} (0=Left, 1=Center, 2=Right)`,
       `Jumping: ${this.player.isJumping ? 'YES' : 'NO'}`,
       `Ducking: ${this.player.isDucking ? 'YES' : 'NO'}`,
+      `Force Fields: ${this.player.getForceFieldCount()}/25 [${forceFieldStatus}]`,
       `Obstacles: ${this.obstacles.length}`,
       `Game Over: ${this.isGameOver ? 'YES' : 'NO'}`,
       ``,
-      `Press F12 to see detailed console logs`
+      `Press F12 for console | F for force field`
     ].join('\n');
 
     this.debugText.setText(debugInfo);

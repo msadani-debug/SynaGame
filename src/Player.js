@@ -41,6 +41,19 @@ export default class Player {
     this.isMovingBetweenLanes = false; // Is the player switching lanes right now?
 
     // ----------------------------------------
+    // FORCE FIELD SYSTEM (PHASE 4)
+    // ----------------------------------------
+    // Force fields are a limited-use protection system
+    // Each run starts with exactly 25 force fields
+    // IMPORTANT: This resets to 25 on EVERY run (no persistence in Phase 4)
+    this.forceFieldCount = 25; // Always start with 25 force fields
+    this.forceFieldActive = false; // Is the force field currently protecting the player?
+    this.forceFieldDuration = 3000; // How long force field lasts (3 seconds)
+    this.forceFieldTimer = null; // Timer to track force field duration
+
+    console.log('🛡️ Force field system initialized: 25 force fields available');
+
+    // ----------------------------------------
     // CREATE THE PLAYER SHAPE
     // ----------------------------------------
     // For now, we'll use a simple rectangle to represent the player
@@ -215,6 +228,74 @@ export default class Player {
     // Return to normal size
     this.sprite.setSize(this.normalWidth, this.normalHeight);
     this.sprite.displayHeight = this.normalHeight;
+  }
+
+  // ============================================
+  // ACTIVATE FORCE FIELD
+  // ============================================
+  // Turn on the protective force field
+  activateForceField() {
+    // Can't activate if we don't have any left
+    if (this.forceFieldCount <= 0) {
+      console.log('❌ No force fields remaining');
+      return false;
+    }
+
+    // Can't activate if already active
+    if (this.forceFieldActive) {
+      console.log('❌ Force field already active');
+      return false;
+    }
+
+    console.log('🛡️ Force field activated!');
+
+    // Use one force field
+    this.forceFieldCount -= 1;
+    this.forceFieldActive = true;
+
+    console.log(`   Force fields remaining: ${this.forceFieldCount}/25`);
+
+    // Automatically deactivate after duration
+    this.forceFieldTimer = this.scene.time.delayedCall(this.forceFieldDuration, () => {
+      this.deactivateForceField();
+    });
+
+    return true;
+  }
+
+  // ============================================
+  // DEACTIVATE FORCE FIELD
+  // ============================================
+  // Turn off the force field
+  deactivateForceField() {
+    if (!this.forceFieldActive) {
+      return; // Not active, nothing to do
+    }
+
+    console.log('🛡️ Force field deactivated');
+    this.forceFieldActive = false;
+
+    // Clear the timer if it exists
+    if (this.forceFieldTimer) {
+      this.forceFieldTimer.remove();
+      this.forceFieldTimer = null;
+    }
+  }
+
+  // ============================================
+  // GET FORCE FIELD COUNT
+  // ============================================
+  // Return how many force fields the player has left
+  getForceFieldCount() {
+    return this.forceFieldCount;
+  }
+
+  // ============================================
+  // IS FORCE FIELD ACTIVE
+  // ============================================
+  // Check if force field is currently protecting the player
+  isForceFieldActive() {
+    return this.forceFieldActive;
   }
 
   // ============================================
