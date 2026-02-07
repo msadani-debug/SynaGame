@@ -217,12 +217,29 @@ export default class MainScene extends Phaser.Scene {
     this.gameOverText.setOrigin(0.5, 0.5);
     this.gameOverText.setVisible(false); // Hidden until game over
 
+    // ----------------------------------------
+    // ADD DEBUG INFO (VISIBLE ON SCREEN)
+    // ----------------------------------------
+    // This shows player state on screen so we can see what's happening
+    this.debugText = this.add.text(
+      10,
+      10,
+      'Debug Info',
+      {
+        fontSize: '16px',
+        color: '#00ff00',
+        backgroundColor: '#000000',
+        padding: { x: 10, y: 10 }
+      }
+    );
+
     // Store game dimensions
     this.gameWidth = width;
     this.gameHeight = height;
 
     console.log('✅ Controls set up');
     console.log('🎮 Phase 3 ready! Avoid the obstacles!');
+    console.log('📊 Debug text added to top-left corner');
   }
 
   // ============================================
@@ -251,6 +268,9 @@ export default class MainScene extends Phaser.Scene {
   // ============================================
   // Check if the player hit an obstacle
   checkCollision(obstacle) {
+    // Log that collision check is running
+    console.log('🔍 Checking collision...');
+
     const playerSprite = this.player.getSprite();
     const obstacleSprite = obstacle.getSprite();
 
@@ -258,8 +278,12 @@ export default class MainScene extends Phaser.Scene {
     const bounds1 = playerSprite.getBounds();
     const bounds2 = obstacleSprite.getBounds();
 
+    console.log(`   Player bounds: x=${Math.round(bounds1.x)}, y=${Math.round(bounds1.y)}, w=${Math.round(bounds1.width)}, h=${Math.round(bounds1.height)}`);
+    console.log(`   Obstacle bounds: x=${Math.round(bounds2.x)}, y=${Math.round(bounds2.y)}, w=${Math.round(bounds2.width)}, h=${Math.round(bounds2.height)}`);
+
     // First check: Are the rectangles touching?
     if (Phaser.Geom.Intersects.RectangleToRectangle(bounds1, bounds2)) {
+      console.log('   ✓ Rectangles ARE intersecting!');
       // They're touching! Now check if it's a valid collision
       // based on the obstacle type and player state
 
@@ -339,6 +363,8 @@ export default class MainScene extends Phaser.Scene {
           return false; // Safe - different lane
         }
       }
+    } else {
+      console.log('   ✗ Rectangles NOT intersecting - no collision');
     }
 
     return false; // No collision (rectangles not touching)
@@ -474,6 +500,22 @@ export default class MainScene extends Phaser.Scene {
     if (this.cursors.down.isUp) {
       this.downPressed = false;
     }
+
+    // ----------------------------------------
+    // UPDATE DEBUG TEXT (ON SCREEN)
+    // ----------------------------------------
+    // Show player state and obstacle count on screen
+    const debugInfo = [
+      `Player Lane: ${this.player.currentLane} (0=Left, 1=Center, 2=Right)`,
+      `Jumping: ${this.player.isJumping ? 'YES' : 'NO'}`,
+      `Ducking: ${this.player.isDucking ? 'YES' : 'NO'}`,
+      `Obstacles: ${this.obstacles.length}`,
+      `Game Over: ${this.isGameOver ? 'YES' : 'NO'}`,
+      ``,
+      `Press F12 to see detailed console logs`
+    ].join('\n');
+
+    this.debugText.setText(debugInfo);
 
     // ----------------------------------------
     // UPDATE PLAYER
