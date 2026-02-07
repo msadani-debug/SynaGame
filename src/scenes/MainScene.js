@@ -258,6 +258,7 @@ export default class MainScene extends Phaser.Scene {
     const bounds1 = playerSprite.getBounds();
     const bounds2 = obstacleSprite.getBounds();
 
+    // First check: Are the rectangles touching?
     if (Phaser.Geom.Intersects.RectangleToRectangle(bounds1, bounds2)) {
       // They're touching! Now check if it's a valid collision
       // based on the obstacle type and player state
@@ -266,32 +267,81 @@ export default class MainScene extends Phaser.Scene {
       const obstacleLane = obstacle.getLane();
       const playerLane = this.player.currentLane;
 
+      // Get player state for debugging
+      const isJumping = this.player.isJumping;
+      const isDucking = this.player.isDucking;
+
       // ----------------------------------------
-      // COLLISION RULES
+      // COLLISION RULES (EXPLAINED SIMPLY)
       // ----------------------------------------
 
       if (obstacleType === 'lane') {
-        // LANE OBSTACLE: Only collide if player is in the same lane
+        // LANE OBSTACLE (RED BARRIER)
+        // Rule: Only hits if player is in the same lane
+        // Why: You avoid it by switching to a different lane
+
         if (playerLane === obstacleLane) {
-          console.log('💥 Hit lane obstacle!');
-          return true; // Collision!
+          console.log('💥 COLLISION! Lane obstacle hit!');
+          console.log(`   Player in lane ${playerLane}, obstacle in lane ${obstacleLane}`);
+          return true; // Game over!
+        } else {
+          console.log('✅ Safe! Lane obstacle avoided (different lane)');
+          return false; // Safe!
         }
+
       } else if (obstacleType === 'jump') {
-        // JUMP OBSTACLE: Only collide if player is NOT jumping
-        if (playerLane === obstacleLane && !this.player.isJumping) {
-          console.log('💥 Hit jump obstacle - should have jumped!');
-          return true; // Collision!
+        // JUMP OBSTACLE (ORANGE LOW BLOCK)
+        // Rule: Hits if player is NOT jumping (regardless of lane)
+        // Why: You must jump over it - being in a different lane doesn't help
+
+        console.log(`🟠 Jump obstacle collision check:`);
+        console.log(`   Player lane: ${playerLane}, Obstacle lane: ${obstacleLane}`);
+        console.log(`   Player is jumping: ${isJumping}`);
+
+        // Only check if player is in the same lane as the obstacle
+        if (playerLane === obstacleLane) {
+          if (!isJumping) {
+            // Player is on the ground - HIT!
+            console.log('💥 COLLISION! Jump obstacle hit (not jumping)');
+            return true; // Game over!
+          } else {
+            // Player is jumping - SAFE!
+            console.log('✅ Safe! Jumped over obstacle');
+            return false; // Safe!
+          }
+        } else {
+          console.log('✅ Safe! Jump obstacle in different lane');
+          return false; // Safe - different lane
         }
+
       } else if (obstacleType === 'duck') {
-        // DUCK OBSTACLE: Only collide if player is NOT ducking
-        if (playerLane === obstacleLane && !this.player.isDucking) {
-          console.log('💥 Hit duck obstacle - should have ducked!');
-          return true; // Collision!
+        // DUCK OBSTACLE (BLUE HIGH BAR)
+        // Rule: Hits if player is NOT ducking (regardless of lane)
+        // Why: You must duck under it - being in a different lane doesn't help
+
+        console.log(`🔵 Duck obstacle collision check:`);
+        console.log(`   Player lane: ${playerLane}, Obstacle lane: ${obstacleLane}`);
+        console.log(`   Player is ducking: ${isDucking}`);
+
+        // Only check if player is in the same lane as the obstacle
+        if (playerLane === obstacleLane) {
+          if (!isDucking) {
+            // Player is standing - HIT!
+            console.log('💥 COLLISION! Duck obstacle hit (not ducking)');
+            return true; // Game over!
+          } else {
+            // Player is ducking - SAFE!
+            console.log('✅ Safe! Ducked under obstacle');
+            return false; // Safe!
+          }
+        } else {
+          console.log('✅ Safe! Duck obstacle in different lane');
+          return false; // Safe - different lane
         }
       }
     }
 
-    return false; // No collision
+    return false; // No collision (rectangles not touching)
   }
 
   // ============================================
