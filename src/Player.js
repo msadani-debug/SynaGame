@@ -68,6 +68,20 @@ export default class Player {
     );
 
     // ----------------------------------------
+    // FORCE FIELD VISUAL
+    // ----------------------------------------
+    // A glowing circle around the player, shown only when force field is active
+    this.forceFieldSprite = scene.add.circle(
+      x + this.lanes[this.currentLane],
+      y,
+      45,      // slightly larger than the player
+      0xff6b6b, // matches player color
+      0.4
+    );
+    this.forceFieldSprite.setVisible(false);
+    this.forceFieldPulseTween = null;
+
+    // ----------------------------------------
     // ADD PHYSICS
     // ----------------------------------------
     // Physics lets the player fall with gravity and jump
@@ -255,6 +269,21 @@ export default class Player {
 
     console.log(`   Force fields remaining: ${this.forceFieldCount}/25`);
 
+    // Show and pulse the force field visual
+    this.forceFieldSprite.setPosition(this.sprite.x, this.sprite.y);
+    this.forceFieldSprite.setFillStyle(0xff6b6b, 0.4);
+    this.forceFieldSprite.setScale(1);
+    this.forceFieldSprite.setVisible(true);
+    this.forceFieldPulseTween = this.scene.tweens.add({
+      targets: this.forceFieldSprite,
+      alpha: { from: 0.25, to: 0.55 },
+      scale: { from: 0.92, to: 1.08 },
+      duration: 500,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
     // Automatically deactivate after duration
     this.forceFieldTimer = this.scene.time.delayedCall(this.forceFieldDuration, () => {
       this.deactivateForceField();
@@ -275,11 +304,50 @@ export default class Player {
     console.log('🛡️ Force field deactivated');
     this.forceFieldActive = false;
 
-    // Clear the timer if it exists
     if (this.forceFieldTimer) {
       this.forceFieldTimer.remove();
       this.forceFieldTimer = null;
     }
+
+    if (this.forceFieldPulseTween) {
+      this.forceFieldPulseTween.stop();
+      this.forceFieldPulseTween = null;
+    }
+
+    this.forceFieldSprite.setVisible(false);
+  }
+
+  // ============================================
+  // BREAK FORCE FIELD (absorb a hit)
+  // ============================================
+  // Called when the force field blocks a collision — plays a shatter flash
+  breakForceField() {
+    if (!this.forceFieldActive) return;
+
+    console.log('💥 Force field shattered!');
+
+    // Mark inactive immediately so no second hit can trigger this again
+    this.forceFieldActive = false;
+
+    if (this.forceFieldTimer) {
+      this.forceFieldTimer.remove();
+      this.forceFieldTimer = null;
+    }
+
+    if (this.forceFieldPulseTween) {
+      this.forceFieldPulseTween.stop();
+      this.forceFieldPulseTween = null;
+    }
+
+    // Flash white and expand, then hide
+    this.forceFieldSprite.setFillStyle(0xffffff, 0.9);
+    this.forceFieldSprite.setScale(1.4);
+
+    this.scene.time.delayedCall(180, () => {
+      this.forceFieldSprite.setVisible(false);
+      this.forceFieldSprite.setScale(1);
+      this.forceFieldSprite.setFillStyle(0xff6b6b, 0.4);
+    });
   }
 
   // ============================================
@@ -307,6 +375,11 @@ export default class Player {
     // GROUND DETECTION & LANDING (FIXED!)
     // ----------------------------------------
     // This checks if the player has landed after jumping
+
+    // Keep force field visual centred on the player
+    if (this.forceFieldActive || this.forceFieldSprite.visible) {
+      this.forceFieldSprite.setPosition(this.sprite.x, this.sprite.y);
+    }
 
     if (this.isJumping) {
       // Player is in the air - check if they've landed

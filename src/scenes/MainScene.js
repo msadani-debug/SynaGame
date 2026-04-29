@@ -452,8 +452,15 @@ export default class MainScene extends Phaser.Scene {
 
       // Check for collision with player
       if (this.checkCollision(obstacle)) {
+        if (this.player.isForceFieldActive()) {
+          console.log('🛡️ Force field absorbed the hit!');
+          this.player.breakForceField();
+          obstacle.destroy();
+          this.obstacles.splice(i, 1);
+          continue;
+        }
         this.gameOver();
-        return; // Stop updating after game over
+        return;
       }
     }
 
